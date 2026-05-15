@@ -17,25 +17,33 @@ public class DupeListener implements Listener {
         if (event.getClickedInventory() == null) return;
         if (event.getClickedInventory().equals(event.getWhoClicked().getInventory())) return;
 
-        // Check if the player is using the Number Key swap (holding 1-9)
+        // Check if the player is holding a Number Key (like 1) over the item
         if (event.getClick() == ClickType.NUMBER_KEY) {
             Player player = (Player) event.getWhoClicked();
             ItemStack clickedItem = event.getCurrentItem();
 
-            // Ensure the item exists and isn't air
+            // Ensure the item exists, isn't air, and hasn't reached max stack size (64)
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-            // Check if the player's inventory is completely full (firstEmpty() returns -1)
+            // Check if the player's inventory is completely full
             if (player.getInventory().firstEmpty() == -1) {
                 
-                // Simulate the glitch by cloning the item
-                ItemStack duplicate = clickedItem.clone();
+                // 1. DUPE IN CHEST: If the stack in the chest is less than max size, grow it
+                if (clickedItem.getAmount() < clickedItem.getMaxStackSize()) {
+                    clickedItem.setAmount(clickedItem.getAmount() + 1);
+                } 
+                // 2. DROP ON GROUND: If the chest slot is already a full stack of 64, drop the extras
+                else {
+                    ItemStack duplicate = clickedItem.clone();
+                    duplicate.setAmount(1); // Drop them 1 by 1 as you hold the key
+                    player.getWorld().dropItemNaturally(player.getLocation(), duplicate);
+                }
                 
-                // Drop the item at the player's feet
-                player.getWorld().dropItemNaturally(player.getLocation(), duplicate);
+                // Play the glitch audio/visual feedback
+                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.2f, 1.5f);
                 
-                // Visual/Audio feedback that the "glitch" triggered
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.0f);
+                // Cancel the default vanilla packet so the client doesn't desync badly
+                event.setCancelled(true);
             }
         }
     }

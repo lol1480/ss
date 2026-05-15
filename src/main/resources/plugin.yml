@@ -1,0 +1,6 @@
+name: ClassicDupeSim
+version: 1.0
+main: com.yourname.dupesim.Main
+api-version: '1.21'
+author: CustomDev
+description: Simulates the classic inventory hotbar-swap duplication glitch for 1.21.11.
